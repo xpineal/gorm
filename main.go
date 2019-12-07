@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/jinzhu/gorm/sqlx"
+	"github.com/xpineal/gorm/sqlx"
 	"reflect"
 	"strings"
 	"sync"
