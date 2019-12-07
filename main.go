@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/jinzhu/gorm/sqlx"
 	"reflect"
 	"strings"
 	"sync"
@@ -67,13 +68,16 @@ func Open(dialect string, args ...interface{}) (db *DB, err error) {
 	switch value := args[0].(type) {
 	case string:
 		var driver = dialect
+		var dbOpen *sql.DB
 		if len(args) == 1 {
 			source = value
 		} else if len(args) >= 2 {
 			driver = value
 			source = args[1].(string)
 		}
-		dbSQL, err = sql.Open(driver, source)
+		dbOpen, err = sql.Open(driver, source)
+		dbSQL = sqlx.NewDB(dbOpen)
+
 		ownDbSQL = true
 	case SQLCommon:
 		dbSQL = value
@@ -123,8 +127,11 @@ func (s *DB) Close() error {
 
 // DB get `*sql.DB` from current connection
 // If the underlying database connection is not a *sql.DB, returns nil
-func (s *DB) DB() *sql.DB {
-	db, _ := s.db.(*sql.DB)
+func (s *DB) DB() *sqlx.DB {
+	db, ok := s.db.(*sqlx.DB)
+	if !ok {
+		panic("can't support full GORM on currently status, maybe this is a TX instance.")
+	}
 	return db
 }
 
